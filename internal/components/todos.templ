@@ -1,0 +1,132 @@
+package components
+
+import "github.com/derekmwright/todoapp/internal/store"
+import "time"
+import "fmt"
+
+templ TodoList(todos []store.Todo) {
+<div id="todo-card-list">
+  <div class="flex space-x-4 py-4">
+    <div class="flex flex-auto items-center pl-2">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" class="size-5 text-zinc-800/50 dark:text-zinc-200/50">
+        <path d="M448 272C448 174.8 369.2 96 272 96C174.8 96 96 174.8 96 272C96 369.2 174.8 448 272 448C369.2 448 448 369.2 448 272zM407.3 430C371 461.2 323.7 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272C480 323.7 461.2 371 430 407.3L571.3 548.7C577.5 554.9 577.5 565.1 571.3 571.3C565.1 577.5 554.9 577.5 548.7 571.3L407.3 430z"/>
+      </svg>
+      <input name="search" aria-label="Search" class="block flex-auto bg-zinc-100 text-base mx-4 p-1.5 text-zinc-900 outline outline-zinc-800/20 dark:outline-white/10 placeholder:text-zinc-400 sm:text-sm/6 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500">
+
+      <div class="grid grid-cols-1">
+        <select id="show" aria-label="show" name="show" data-bind-show data-on-change="@get('/')" class="col-start-1 row-start-1 w-full appearance-none bg-white py-1.5 pr-8 pl-3 text-base text-zinc-900 outline-1 -outline-offset-1 outline-zinc-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-zinc-800 dark:focus-visible:outline-sky-500">
+          <option value="all">All</option>
+          <option value="open" selected>Unfinished</option>
+          <option value="done">Completed</option>
+        </select>
+        <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-500 sm:size-4 dark:text-zinc-400">
+          <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+        </svg>
+      </div>
+
+    </div>
+    @PrimaryButton("Create", templ.Attributes{"data-on-click__prevent": "@get('/todos/new')"})
+  </div>
+  <div class="sm:columns-3 md:columns-4 sm:gap-4 space-y-4">
+    for _, t := range todos {
+      @TodoCard(t)
+    }
+  </div>
+  <div id="drag-area" class="hidden sm:block w-full h-72 mt-4 outline outline-dashed p-0.5 outline-black/10 dark:outline-white/10" data-on-dragover="evt.preventDefault()" data-on-drop="@post('/todos/'+evt.dataTransfer.getData('text')+'/completed')">
+    <div class="flex block w-full h-full bg-zinc-50 dark:bg-zinc-800/50 items-center justify-center">
+      <span class="text-zinc-700/50 dark:text-zinc-400/50">Drag a Todo here to complete it</span>
+    </div>
+  </div>
+</div>
+}
+
+templ TodoCard(todo store.Todo) {
+{{
+colors := " text-green-600 dark:text-green-400"
+// 1+ Month old is red
+if todo.CreatedAt.AddDate(0, 0, 30).Before(time.Now()) {
+  colors = " text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20"
+// 2+ Weeks is orange
+} else if todo.CreatedAt.AddDate(0, 0, 14).Before(time.Now()) {
+  colors = " text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20"
+// 1+ Week is yellow
+} else if todo.CreatedAt.AddDate(0, 0, 7).Before(time.Now()) {
+  colors = " text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/20"
+}
+}}
+<div id={todo.ID} class="divide-y divide-zinc-200 overflow-hidden bg-white shadow-sm dark:divide-white/10 dark:bg-zinc-800/50 dark:outline dark:-outline-offset-1 dark:outline-white/10" draggable="true" data-on-dragstart={ fmt.Sprintf("evt.dataTransfer.setData('text/plain', '%d')", todo.ID) }>
+  <div class={"px-3 py-4 sm:px-5 text-xl font-semibold " + colors}>
+    { todo.Name }
+  </div>
+  <div class="px-3 py-4 sm:p-5 bg-zinc-50/50 dark:bg-zinc-950/50 space-y-4">
+    <div>
+      { todo.Description }
+    </div>
+    <div class="text-xs">
+      <span class="font-bold pr-1 text-zinc-600 dark:text-zinc-300">Last Updated</span><span class="text-zinc-700 dark:text-zinc-400">{ todo.CreatedAt.Format("January 02, 2006 @ 15:04:05") }</span>
+    </div>
+  </div>
+  <div class="px-3 py-3 sm:px-5 flex justify-between sm:justify-end items-center">
+    <div class="block sm:hidden">
+      @PrimaryButton("Completed", nil)
+    </div>
+    // Edit button
+    <a href={ fmt.Sprintf("/todos/%d/edit", todo.ID) } data-on-click__prevent={ fmt.Sprintf("@get('/todos/%d/edit')", todo.ID) }>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" stroke="none" fill="currentColor" class="text-sky-600 hover:text-sky-500 dark:text-sky-600 dark:hover:text-sky-500 size-5">
+        <path d="M505 122.9L517.1 135C526.5 144.4 526.5 159.6 517.1 168.9L488 198.1L441.9 152L471 122.9C480.4 113.5 495.6 113.5 504.9 122.9zM273.8 320.2L408 185.9L454.1 232L319.8 366.2C316.9 369.1 313.3 371.2 309.4 372.3L250.9 389L267.6 330.5C268.7 326.6 270.8 323 273.7 320.1zM437.1 89L239.8 286.2C231.1 294.9 224.8 305.6 221.5 317.3L192.9 417.3C190.5 425.7 192.8 434.7 199 440.9C205.2 447.1 214.2 449.4 222.6 447L322.6 418.4C334.4 415 345.1 408.7 353.7 400.1L551 202.9C579.1 174.8 579.1 129.2 551 101.1L538.9 89C510.8 60.9 465.2 60.9 437.1 89zM152 128C103.4 128 64 167.4 64 216L64 488C64 536.6 103.4 576 152 576L424 576C472.6 576 512 536.6 512 488L512 376C512 362.7 501.3 352 488 352C474.7 352 464 362.7 464 376L464 488C464 510.1 446.1 528 424 528L152 528C129.9 528 112 510.1 112 488L112 216C112 193.9 129.9 176 152 176L264 176C277.3 176 288 165.3 288 152C288 138.7 277.3 128 264 128L152 128z"/>
+      </svg>
+    </a>
+  </div>
+</div>
+}
+
+templ TodoNew() {
+<div id="todo-card-list" class="mt-6">
+  <form autocomplete="off" data-signals-creating="false">
+    <div class="space-y-4">
+      <div>
+        <label for="name" class="block text-sm/6 font-medium text-zinc-900 dark:text-white">Name</label>
+        <div class="mt-2">
+          <input id="name" name="name" autocomplete="off" type="text" placeholder="ToDo name" data-bind-name class="block w-full bg-white px-3 py-1.5 text-base text-zinc-900 outline-1 -outline-offset-1 outline-zinc-300 placeholder:text-zinc-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-zinc-500 dark:focus:outline-sky-500">
+        </div>
+      </div>
+      <div>
+        <label for="description" class="block text-sm/6 font-medium text-zinc-900 dark:text-white">Description</label>
+        <div class="mt-2">
+          <textarea id="description" name="description" rows="3" placeholder="Add a description..." data-bind-description class="block w-full bg-white px-3 py-1.5 text-base text-zinc-900 outline-1 -outline-offset-1 outline-zinc-300 placeholder:text-zinc-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-zinc-500 dark:focus:outline-sky-500"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-4">
+        @SecondaryButton("Cancel", templ.Attributes{"data-on-click__prevent": "@get('/')" })
+        @PrimaryButton("Save", templ.Attributes{"data-on-click__prevent": "@post('/todos')", "data-indicator": "creating", "data-attr-disabled": "$creating"})
+      </div>
+    </div>
+  </form>
+</div>
+}
+
+templ TodoEdit(todo *store.Todo) {
+<div id="todo-card-list" class="mt-6">
+  <form autocomplete="off" data-signals-updating="false">
+      <div class="space-y-4">
+        <input type="hidden" value={ todo.ID } name="id" data-bind-id>
+        <div>
+          <label for="name" class="block text-sm/6 font-medium text-zinc-900 dark:text-white">Name</label>
+          <div class="mt-2">
+            <input id="name" name="name" autocomplete="off" type="text" value={ todo.Name } placeholder="ToDo name" data-bind-name class="block w-full bg-white px-3 py-1.5 text-base text-zinc-900 outline-1 -outline-offset-1 outline-zinc-300 placeholder:text-zinc-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-zinc-500 dark:focus:outline-sky-500">
+          </div>
+        </div>
+        <div>
+          <label for="description" class="block text-sm/6 font-medium text-zinc-900 dark:text-white">Description</label>
+          <div class="mt-2">
+            <textarea id="description" name="description" rows="3" placeholder="Add a description..." data-bind-description class="block w-full bg-white px-3 py-1.5 text-base text-zinc-900 outline-1 -outline-offset-1 outline-zinc-300 placeholder:text-zinc-400 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-zinc-500 dark:focus:outline-sky-500">{ todo.Description }</textarea>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-4">
+          @SecondaryButton("Cancel", templ.Attributes{"data-on-click__prevent": "@get('/')" })
+          @PrimaryButton("Save", templ.Attributes{"data-on-click__prevent": fmt.Sprintf("@put('/todos/%d')", todo.ID), "data-indicator": "updating", "data-attr-disabled": "$updating"})
+        </div>
+      </div>
+  </form>
+</div>
+}

@@ -1,0 +1,21 @@
+package components
+
+templ PrimaryButton(text string, attributes templ.Attributes) {
+  <button
+    type="button"
+    class="inline-flex items-center bg-sky-600 px-3 py-2 cursor-pointer text-sm font-semibold text-white shadow-xs hover:bg-sky-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 dark:bg-sky-600 dark:hover:bg-sky-500 dark:focus-visible:outline-sky-500"
+    { attributes... }
+  >
+    { text }
+  </button>
+}
+
+templ SecondaryButton(text string, attributes templ.Attributes) {
+  <button
+    type="button"
+    class="bg-white px-3 py-2 cursor-pointer text-sm font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50 dark:bg-white/10 dark:text-white dark:shadow-none dark:inset-ring-white/5 dark:hover:bg-white/20"
+    { attributes... }
+  >
+    { text }
+  </button>
+}

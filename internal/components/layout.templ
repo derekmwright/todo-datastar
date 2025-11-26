@@ -1,0 +1,34 @@
+package components
+
+templ Layout(title string, child templ.Component) {
+<!DOCTYPE html>
+<html lang="en" class="bg-zinc-100 dark:bg-zinc-900 h-dvh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{ title }</title>
+    <script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@main/bundles/datastar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="text-zinc-800 dark:text-zinc-200 h-dvh" data-indicator="fetching" data-on-load="@get('/endpoint')">
+<header id="site-navigation"></header>
+<main id="main-content" class="mx-auto max-w-7xl sm:px-6 lg:px-8 pt-2 sm:pt-6">
+  <div class="md:flex md:items-center md:justify-between">
+    <div class="min-w-0 flex-1">
+      <a data-on-click__prevent="@get('/')"><h2 class="text-xl font-bold text-zinc-900 sm:truncate sm:text-3xl sm:tracking-tight dark:text-white">ToDo App</h2></a>
+    </div>
+  </div>
+  @child
+</main>
+<footer id="page-footer" class="flex mx-auto max-w-7xl sm:px-6 lg:px-8 pt-2 sm:pt-6 items-center justify-center">
+  <div class="text-sm">
+    <span class="font-bold pr-1 text-zinc-600 dark:text-zinc-300">Created by</span><a href="https://github.com/derekmwright" class="text-sky-600 hover:text-sky-500 dark:text-sky-600 dark:hover:text-sky-500">Derek Wright</a>
+  </div>
+</footer>
+</body>
+</html>
+}
+
+templ Empty() {
+  <div id="todo-card-list" class="mt-6"></div>
+}
